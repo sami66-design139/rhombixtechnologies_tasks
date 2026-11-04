@@ -1,0 +1,122 @@
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+struct Task {
+    std::string description;
+    bool completed = false;
+};
+
+int readMenuChoice() {
+    std::string input;
+    std::cout << "\n1. Add task\n"
+              << "2. Mark task as completed\n"
+              << "3. View tasks\n"
+              << "4. Exit\n"
+              << "Choose an option: ";
+
+    if (!std::getline(std::cin, input)) {
+        return 4;
+    }
+
+    try {
+        std::size_t parsedLength = 0;
+        const int choice = std::stoi(input, &parsedLength);
+        if (parsedLength == input.length()) {
+            return choice;
+        }
+    } catch (const std::invalid_argument&) {
+    } catch (const std::out_of_range&) {
+    }
+
+    return 0;
+}
+
+void addTask(std::vector<Task>& tasks) {
+    std::string description;
+    std::cout << "Enter task description: ";
+    if (!std::getline(std::cin, description)) {
+        return;
+    }
+    if (description.find_first_not_of(" \t\r\n") == std::string::npos) {
+        std::cout << "Task description cannot be empty.\n";
+        return;
+    }
+
+    tasks.push_back({description, false});
+    std::cout << "Task added.\n";
+}
+
+void viewTasks(const std::vector<Task>& tasks) {
+    if (tasks.empty()) {
+        std::cout << "No tasks yet.\n";
+        return;
+    }
+
+    std::cout << "\nYour tasks:\n";
+    for (std::size_t i = 0; i < tasks.size(); ++i) {
+        std::cout << (i + 1) << ". [" << (tasks[i].completed ? 'x' : ' ')
+                  << "] " << tasks[i].description << '\n';
+    }
+}
+
+void completeTask(std::vector<Task>& tasks) {
+    if (tasks.empty()) {
+        std::cout << "There are no tasks to complete.\n";
+        return;
+    }
+
+    viewTasks(tasks);
+    std::cout << "Enter the task number to mark as completed: ";
+    std::string input;
+    if (!std::getline(std::cin, input)) {
+        return;
+    }
+
+    try {
+        std::size_t parsedLength = 0;
+        const unsigned long taskNumber = std::stoul(input, &parsedLength);
+        if (parsedLength != input.length() || taskNumber == 0 ||
+            taskNumber > tasks.size()) {
+            std::cout << "Invalid task number.\n";
+            return;
+        }
+
+        Task& task = tasks[taskNumber - 1];
+        if (task.completed) {
+            std::cout << "That task is already completed.\n";
+        } else {
+            task.completed = true;
+            std::cout << "Task marked as completed.\n";
+        }
+    } catch (const std::invalid_argument&) {
+        std::cout << "Invalid task number.\n";
+    } catch (const std::out_of_range&) {
+        std::cout << "Invalid task number.\n";
+    }
+}
+
+int main() {
+    std::vector<Task> tasks;
+
+    while (true) {
+        switch (readMenuChoice()) {
+            case 1:
+                addTask(tasks);
+                break;
+            case 2:
+                completeTask(tasks);
+                break;
+            case 3:
+                viewTasks(tasks);
+                break;
+            case 4:
+                std::cout << "Goodbye!\n";
+                return 0;
+            default:
+                std::cout << "Invalid option. Please choose 1-4.\n";
+                break;
+        }
+    }
+}
